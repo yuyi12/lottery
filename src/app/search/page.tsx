@@ -24,12 +24,27 @@ interface SearchRecord {
   route012Ratio: string;
 }
 
-interface FilterOptions {
-  bigSmall: string[];
-  oddEven: string[];
-  threeZone: string[];
-  route012: string[];
-}
+// 固定选项列表（有序）
+const BIG_SMALL_OPTIONS = ["3:3", "4:2", "2:4", "5:1", "1:5", "0:6", "6:0"];
+const ODD_EVEN_OPTIONS = ["3:3", "4:2", "2:4", "5:1", "1:5", "0:6", "6:0"];
+const THREE_ZONE_OPTIONS = [
+  "0:0:6", "0:1:5", "0:2:4", "0:3:3", "0:4:2", "0:5:1", "0:6:0",
+  "1:0:5", "1:1:4", "1:2:3", "1:3:2", "1:4:1", "1:5:0",
+  "2:0:4", "2:1:3", "2:2:2", "2:3:1", "2:4:0",
+  "3:0:3", "3:1:2", "3:2:1", "3:3:0",
+  "4:0:2", "4:1:1", "4:2:0",
+  "5:0:1", "5:1:0",
+  "6:0:0",
+];
+const ROUTE_012_OPTIONS = [
+  "0:0:6", "0:1:5", "0:2:4", "0:3:3", "0:4:2", "0:5:1", "0:6:0",
+  "1:0:5", "1:1:4", "1:2:3", "1:3:2", "1:4:1", "1:5:0",
+  "2:0:4", "2:1:3", "2:2:2", "2:3:1", "2:4:0",
+  "3:0:3", "3:1:2", "3:2:1", "3:3:0",
+  "4:0:2", "4:1:1", "4:2:0",
+  "5:0:1", "5:1:0",
+  "6:0:0",
+];
 
 const INDICATOR_TIPS: Record<string, string> = {
   sum: "6个红球之和，范围21-183，90-110 (黄金区间)",
@@ -48,9 +63,6 @@ export default function SearchPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(30);
   const [loading, setLoading] = useState(false);
-  const [options, setOptions] = useState<FilterOptions>({
-    bigSmall: [], oddEven: [], threeZone: [], route012: [],
-  });
 
   // 筛选条件 - 默认值
   const [sumMin, setSumMin] = useState<number | null>(90);
@@ -63,16 +75,6 @@ export default function SearchPage() {
   const [oddEven, setOddEven] = useState<string[]>([]);
   const [threeZone, setThreeZone] = useState<string[]>([]);
   const [route012, setRoute012] = useState<string[]>([]);
-
-  // 加载选项
-  useEffect(() => {
-    fetch("/api/search/options")
-      .then((r) => r.json())
-      .then((data) => {
-        if (!data.error) setOptions(data);
-      })
-      .catch(() => {});
-  }, []);
 
   const fetchData = useCallback(async (resetPage = false) => {
     setLoading(true);
@@ -215,7 +217,7 @@ export default function SearchPage() {
                   <Col xs={24} sm={12} lg={6}>
                     <div className="mb-1">{labelWithTip("大小比", "big_small")}</div>
                     <Checkbox.Group
-                      options={options.bigSmall.map((v) => ({ label: v, value: v }))}
+                      options={BIG_SMALL_OPTIONS.map((v) => ({ label: v, value: v }))}
                       value={bigSmall} onChange={(v) => setBigSmall(v as string[])}
                     />
                   </Col>
@@ -224,7 +226,7 @@ export default function SearchPage() {
                   <Col xs={24} sm={12} lg={6}>
                     <div className="mb-1">{labelWithTip("奇偶比", "odd_even")}</div>
                     <Checkbox.Group
-                      options={options.oddEven.map((v) => ({ label: v, value: v }))}
+                      options={ODD_EVEN_OPTIONS.map((v) => ({ label: v, value: v }))}
                       value={oddEven} onChange={(v) => setOddEven(v as string[])}
                     />
                   </Col>
@@ -233,7 +235,7 @@ export default function SearchPage() {
                   <Col xs={24} sm={12} lg={12}>
                     <div className="mb-1">{labelWithTip("三区比", "three_zone")}</div>
                     <Checkbox.Group
-                      options={options.threeZone.map((v) => ({ label: v, value: v }))}
+                      options={THREE_ZONE_OPTIONS.map((v) => ({ label: v, value: v }))}
                       value={threeZone} onChange={(v) => setThreeZone(v as string[])}
                     />
                   </Col>
@@ -242,7 +244,7 @@ export default function SearchPage() {
                   <Col xs={24} sm={12} lg={12}>
                     <div className="mb-1">{labelWithTip("012路比", "route_012")}</div>
                     <Checkbox.Group
-                      options={options.route012.map((v) => ({ label: v, value: v }))}
+                      options={ROUTE_012_OPTIONS.map((v) => ({ label: v, value: v }))}
                       value={route012} onChange={(v) => setRoute012(v as string[])}
                     />
                   </Col>
