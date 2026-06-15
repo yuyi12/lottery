@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { Button, Typography, Menu } from "antd";
-import { LogoutOutlined, HistoryOutlined, SearchOutlined } from "@ant-design/icons";
+import { LogoutOutlined, HistoryOutlined, SearchOutlined, BarChartOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
@@ -38,6 +38,11 @@ export default function Header() {
       icon: <SearchOutlined />,
       label: "指标筛选",
     },
+    {
+      key: "/stats",
+      icon: <BarChartOutlined />,
+      label: "统计分析",
+    },
   ];
 
   return (
@@ -52,7 +57,7 @@ export default function Header() {
           items={menuItems}
           onClick={({ key }) => router.push(key)}
           className="!border-b-0"
-          style={{ minWidth: 200 }}
+          style={{ minWidth: 600 }}
         />
       </div>
       <Button icon={<LogoutOutlined />} onClick={handleLogout} type="text">

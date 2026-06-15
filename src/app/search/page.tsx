@@ -246,7 +246,7 @@ export default function SearchPage() {
             </Col>
 
             {/* 三区比 */}
-            <Col xs={24} sm={12} lg={12}>
+            <Col xs={24} sm={12} lg={6}>
               <div className="mb-1">{labelWithTip("三区比", "three_zone")}</div>
               <Select
                 {...selectProps}
@@ -257,7 +257,7 @@ export default function SearchPage() {
             </Col>
 
             {/* 012路比 */}
-            <Col xs={24} sm={12} lg={12}>
+            <Col xs={24} sm={12} lg={6}>
               <div className="mb-1">{labelWithTip("012路比", "route_012")}</div>
               <Select
                 {...selectProps}
