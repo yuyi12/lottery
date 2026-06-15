@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  email        String @unique
+  passwordHash String @map("password_hash")
+
+  @@map("users")
+}
+
+model LotteryRecord {
+  id             Int      @id @default(autoincrement())
+  code           String   @unique @db.VarChar(7)
+  drawDate       DateTime @map("draw_date") @db.Date
+  red1           Int
+  red2           Int
+  red3           Int
+  red4           Int
+  red5           Int
+  red6           Int
+  blue           Int
+  sumValue       Int      @map("sum_value")
+  bigSmallRatio  String   @map("big_small_ratio")
+  oddEvenRatio   String   @map("odd_even_ratio")
+  span           Int
+  threeZoneRatio String   @map("three_zone_ratio")
+  acValue        Int      @map("ac_value")
+  route012Ratio  String   @map("route_012_ratio")
+
+  @@map("lottery_records")
+}
