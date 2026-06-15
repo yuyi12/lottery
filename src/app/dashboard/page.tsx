@@ -8,16 +8,14 @@ import {
   Input,
   DatePicker,
   message,
-  Typography,
   Card,
 } from "antd";
-import { PlusOutlined, LogoutOutlined, SearchOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { PlusOutlined, SearchOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { RedBalls, BlueBall } from "@/components/ball";
 import AddRecordModal from "@/components/add-record-modal";
 import DetailModal from "@/components/detail-modal";
 import dayjs from "dayjs";
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 interface RecordItem {
@@ -51,12 +49,8 @@ export default function DashboardPage() {
   const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-
-  // 详情弹窗
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailRecord, setDetailRecord] = useState<RecordItem | null>(null);
-
-  // 筛选条件
   const [searchCode, setSearchCode] = useState("");
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
 
@@ -95,11 +89,6 @@ export default function DashboardPage() {
     fetchRecords();
   }, [fetchRecords]);
 
-  const handleLogout = () => {
-    document.cookie = "token=; path=/; max-age=0";
-    router.push("/login");
-  };
-
   const handleDetail = (record: RecordItem) => {
     setDetailRecord(record);
     setDetailOpen(true);
@@ -125,12 +114,8 @@ export default function DashboardPage() {
       render: (_: any, record: RecordItem) => (
         <RedBalls
           numbers={[
-            record.red1,
-            record.red2,
-            record.red3,
-            record.red4,
-            record.red5,
-            record.red6,
+            record.red1, record.red2, record.red3,
+            record.red4, record.red5, record.red6,
           ]}
         />
       ),
@@ -210,20 +195,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 顶栏 */}
-      <div className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
-        <Title level={4} className="!mb-0">
-          双色球历史中奖记录
-        </Title>
-        <Button
-          icon={<LogoutOutlined />}
-          onClick={handleLogout}
-          type="text"
-        >
-          退出登录
-        </Button>
-      </div>
-
       <div className="p-6">
         <Card className="mb-4">
           <div className="flex flex-wrap gap-3 items-center">
@@ -231,10 +202,7 @@ export default function DashboardPage() {
               placeholder="搜索期号"
               prefix={<SearchOutlined />}
               value={searchCode}
-              onChange={(e) => {
-                setSearchCode(e.target.value);
-                setPage(1);
-              }}
+              onChange={(e) => { setSearchCode(e.target.value); setPage(1); }}
               style={{ width: 180 }}
               allowClear
             />
@@ -242,21 +210,14 @@ export default function DashboardPage() {
               placeholder={["开始日期", "结束日期"]}
               onChange={(dates) => {
                 if (dates && dates[0] && dates[1]) {
-                  setDateRange([
-                    dates[0].format("YYYY-MM-DD"),
-                    dates[1].format("YYYY-MM-DD"),
-                  ]);
+                  setDateRange([dates[0].format("YYYY-MM-DD"), dates[1].format("YYYY-MM-DD")]);
                 } else {
                   setDateRange(null);
                 }
                 setPage(1);
               }}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setModalOpen(true)}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
               新增记录
             </Button>
           </div>
@@ -275,10 +236,7 @@ export default function DashboardPage() {
               total: total,
               showSizeChanger: true,
               showTotal: (t) => `共 ${t} 条记录`,
-              onChange: (p, ps) => {
-                setPage(p);
-                setPageSize(ps);
-              },
+              onChange: (p, ps) => { setPage(p); setPageSize(ps); },
             }}
           />
         </Card>
@@ -287,12 +245,8 @@ export default function DashboardPage() {
       <AddRecordModal
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
-        onSuccess={() => {
-          setModalOpen(false);
-          fetchRecords();
-        }}
+        onSuccess={() => { setModalOpen(false); fetchRecords(); }}
       />
-
       <DetailModal
         open={detailOpen}
         record={detailRecord}

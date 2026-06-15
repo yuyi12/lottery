@@ -39,3 +39,22 @@ model LotteryRecord {
 
   @@map("lottery_records")
 }
+
+model AllLotteryRecord {
+  id             Int    @id @default(autoincrement())
+  red1           Int
+  red2           Int
+  red3           Int
+  red4           Int
+  red5           Int
+  red6           Int
+  sumValue       Int    @map("sum_value")
+  bigSmallRatio  String @map("big_small_ratio")
+  oddEvenRatio   String @map("odd_even_ratio")
+  span           Int
+  threeZoneRatio String @map("three_zone_ratio")
+  acValue        Int    @map("ac_value")
+  route012Ratio  String @map("route_012_ratio")
+
+  @@map("all_lottery_records")
+}

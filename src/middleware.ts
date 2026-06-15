@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/jwt";
 
-const PROTECTED_PATHS = ["/api/records", "/dashboard"];
+const PROTECTED_PATHS = ["/api/records", "/api/search", "/dashboard", "/search"];
 const AUTH_PAGE = "/login";
 
 export async function middleware(request: NextRequest) {
@@ -37,5 +37,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/records/:path*", "/dashboard/:path*"],
+  matcher: ["/api/records/:path*", "/api/search/:path*", "/dashboard/:path*", "/search/:path*"],
 };
