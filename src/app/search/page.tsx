@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table, Button, InputNumber, Select, Card, Row, Col, Space,
@@ -72,19 +72,27 @@ export default function SearchPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(30);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const initialLoaded = useRef(false);
 
-  // 筛选条件 — 默认全部为空
-  const [sumMin, setSumMin] = useState<number | null>(null);
-  const [sumMax, setSumMax] = useState<number | null>(null);
-  const [spanMin, setSpanMin] = useState<number | null>(null);
-  const [spanMax, setSpanMax] = useState<number | null>(null);
-  const [acMin, setAcMin] = useState<number | null>(null);
-  const [acMax, setAcMax] = useState<number | null>(null);
-  const [bigSmall, setBigSmall] = useState<string[]>([]);
-  const [oddEven, setOddEven] = useState<string[]>([]);
-  const [threeZone, setThreeZone] = useState<string[]>([]);
-  const [route012, setRoute012] = useState<string[]>([]);
+  // 筛选条件 — 初始默认值
+  const [sumMin, setSumMin] = useState<number | null>(90);
+  const [sumMax, setSumMax] = useState<number | null>(110);
+  const [spanMin, setSpanMin] = useState<number | null>(22);
+  const [spanMax, setSpanMax] = useState<number | null>(28);
+  const [acMin, setAcMin] = useState<number | null>(6);
+  const [acMax, setAcMax] = useState<number | null>(9);
+  const [bigSmall, setBigSmall] = useState<string[]>(["3:3", "4:2", "2:4"]);
+  const [oddEven, setOddEven] = useState<string[]>(["3:3", "4:2", "2:4"]);
+  const [threeZone, setThreeZone] = useState<string[]>(["3:2:1", "2:2:2"]);
+  const [route012, setRoute012] = useState<string[]>(["3:2:1", "2:2:2"]);
+
+  // 初始化时自动查询一次
+  useEffect(() => {
+    if (!initialLoaded.current) {
+      initialLoaded.current = true;
+      doFetch(1, pageSize);
+    }
+  }, []);
 
   const doFetch = useCallback(async (p: number, ps: number) => {
     setLoading(true);
@@ -122,7 +130,6 @@ export default function SearchPage() {
 
   const handleSearch = () => {
     setPage(1);
-    setHasSearched(true);
     doFetch(1, pageSize);
   };
 
@@ -133,11 +140,15 @@ export default function SearchPage() {
   };
 
   const handleReset = () => {
-    setSumMin(null); setSumMax(null);
-    setSpanMin(null); setSpanMax(null);
-    setAcMin(null); setAcMax(null);
-    setBigSmall([]); setOddEven([]); setThreeZone([]); setRoute012([]);
+    setSumMin(90); setSumMax(110);
+    setSpanMin(22); setSpanMax(28);
+    setAcMin(6); setAcMax(9);
+    setBigSmall(["3:3", "4:2", "2:4"]);
+    setOddEven(["3:3", "4:2", "2:4"]);
+    setThreeZone(["3:2:1", "2:2:2"]);
+    setRoute012(["3:2:1", "2:2:2"]);
     setPage(1);
+    doFetch(1, pageSize);
   };
 
   const labelWithTip = (label: string, tipKey: string) => (
@@ -268,7 +279,7 @@ export default function SearchPage() {
           <div className="flex items-center justify-between mb-3">
             <Title level={5} className="!mb-0">
               查询结果
-              {hasSearched && (
+              {total > 0 && (
                 <Tag color="blue" className="ml-2">{total.toLocaleString()} 条</Tag>
               )}
             </Title>
@@ -280,7 +291,7 @@ export default function SearchPage() {
             loading={loading}
             scroll={{ x: 1000 }}
             size="small"
-            pagination={hasSearched ? {
+            pagination={{
               current: page,
               pageSize,
               total,
@@ -288,7 +299,7 @@ export default function SearchPage() {
               pageSizeOptions: ["10", "30", "50", "100"],
               showTotal: (t) => `共 ${t.toLocaleString()} 条`,
               onChange: (p, ps) => handlePageChange(p, ps),
-            } : false}
+            }}
           />
         </Card>
       </div>
