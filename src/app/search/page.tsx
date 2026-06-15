@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Table, Button, InputNumber, Checkbox, Card, Row, Col, Space,
+  Table, Button, InputNumber, Select, Card, Row, Col, Space,
   Tooltip, message, Tag, Collapse, Typography,
 } from "antd";
 import { SearchOutlined, ReloadOutlined, QuestionCircleOutlined } from "@ant-design/icons";
@@ -56,6 +56,15 @@ const INDICATOR_TIPS: Record<string, string> = {
   route_012: "除3余0:除3余1:除3余2",
 };
 
+const selectProps = {
+  mode: "multiple" as const,
+  allowClear: true,
+  maxTagCount: 3,
+  style: { minWidth: 200 },
+  size: "small" as const,
+  placeholder: "请选择",
+};
+
 export default function SearchPage() {
   const router = useRouter();
   const [records, setRecords] = useState<SearchRecord[]>([]);
@@ -63,28 +72,26 @@ export default function SearchPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(30);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  // 筛选条件 - 默认值
-  const [sumMin, setSumMin] = useState<number | null>(90);
-  const [sumMax, setSumMax] = useState<number | null>(110);
-  const [spanMin, setSpanMin] = useState<number | null>(22);
-  const [spanMax, setSpanMax] = useState<number | null>(28);
-  const [acMin, setAcMin] = useState<number | null>(6);
-  const [acMax, setAcMax] = useState<number | null>(9);
+  // 筛选条件 — 默认全部为空
+  const [sumMin, setSumMin] = useState<number | null>(null);
+  const [sumMax, setSumMax] = useState<number | null>(null);
+  const [spanMin, setSpanMin] = useState<number | null>(null);
+  const [spanMax, setSpanMax] = useState<number | null>(null);
+  const [acMin, setAcMin] = useState<number | null>(null);
+  const [acMax, setAcMax] = useState<number | null>(null);
   const [bigSmall, setBigSmall] = useState<string[]>([]);
   const [oddEven, setOddEven] = useState<string[]>([]);
   const [threeZone, setThreeZone] = useState<string[]>([]);
   const [route012, setRoute012] = useState<string[]>([]);
 
-  const fetchData = useCallback(async (resetPage = false) => {
+  const doFetch = useCallback(async (p: number, ps: number) => {
     setLoading(true);
-    const p = resetPage ? 1 : page;
-    if (resetPage) setPage(1);
-
     try {
       const params = new URLSearchParams();
       params.set("page", String(p));
-      params.set("pageSize", String(pageSize));
+      params.set("pageSize", String(ps));
       if (sumMin !== null) params.set("sum_min", String(sumMin));
       if (sumMax !== null) params.set("sum_max", String(sumMax));
       if (spanMin !== null) params.set("span_min", String(spanMin));
@@ -110,21 +117,29 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, sumMin, sumMax, spanMin, spanMax, acMin, acMax,
+  }, [sumMin, sumMax, spanMin, spanMax, acMin, acMax,
       bigSmall, oddEven, threeZone, route012, router]);
 
-  useEffect(() => { fetchData(); }, [page, pageSize]);
+  const handleSearch = () => {
+    setPage(1);
+    setHasSearched(true);
+    doFetch(1, pageSize);
+  };
 
-  const handleSearch = () => fetchData(true);
+  const handlePageChange = (p: number, ps: number) => {
+    setPage(p);
+    setPageSize(ps);
+    doFetch(p, ps);
+  };
+
   const handleReset = () => {
-    setSumMin(90); setSumMax(110);
-    setSpanMin(22); setSpanMax(28);
-    setAcMin(6); setAcMax(9);
+    setSumMin(null); setSumMax(null);
+    setSpanMin(null); setSpanMax(null);
+    setAcMin(null); setAcMax(null);
     setBigSmall([]); setOddEven([]); setThreeZone([]); setRoute012([]);
     setPage(1);
   };
 
-  // 带 tip 的 label
   const labelWithTip = (label: string, tipKey: string) => (
     <span>
       {label}{" "}
@@ -137,9 +152,7 @@ export default function SearchPage() {
   const columns = [
     { title: "序号", dataIndex: "id", key: "id", width: 80 },
     {
-      title: "红球",
-      key: "reds",
-      width: 210,
+      title: "红球", key: "reds", width: 210,
       render: (_: any, r: SearchRecord) => (
         <RedBalls numbers={[r.red1, r.red2, r.red3, r.red4, r.red5, r.red6]} size="small" />
       ),
@@ -174,78 +187,74 @@ export default function SearchPage() {
                   {/* 和值 */}
                   <Col xs={24} sm={12} lg={6}>
                     <div className="mb-1">{labelWithTip("和值", "sum")}</div>
-                    <InputNumber
-                      placeholder="最小" min={21} max={183} value={sumMin}
-                      onChange={(v) => setSumMin(v)} style={{ width: 90 }} size="small"
-                    />
+                    <InputNumber placeholder="最小" min={21} max={183} value={sumMin}
+                      onChange={(v) => setSumMin(v)} style={{ width: 90 }} size="small" />
                     <span className="mx-2 text-gray-400">-</span>
-                    <InputNumber
-                      placeholder="最大" min={21} max={183} value={sumMax}
-                      onChange={(v) => setSumMax(v)} style={{ width: 90 }} size="small"
-                    />
+                    <InputNumber placeholder="最大" min={21} max={183} value={sumMax}
+                      onChange={(v) => setSumMax(v)} style={{ width: 90 }} size="small" />
                   </Col>
 
                   {/* 跨度 */}
                   <Col xs={24} sm={12} lg={6}>
                     <div className="mb-1">{labelWithTip("跨度", "span")}</div>
-                    <InputNumber
-                      placeholder="最小" min={5} max={32} value={spanMin}
-                      onChange={(v) => setSpanMin(v)} style={{ width: 90 }} size="small"
-                    />
+                    <InputNumber placeholder="最小" min={5} max={32} value={spanMin}
+                      onChange={(v) => setSpanMin(v)} style={{ width: 90 }} size="small" />
                     <span className="mx-2 text-gray-400">-</span>
-                    <InputNumber
-                      placeholder="最大" min={5} max={32} value={spanMax}
-                      onChange={(v) => setSpanMax(v)} style={{ width: 90 }} size="small"
-                    />
+                    <InputNumber placeholder="最大" min={5} max={32} value={spanMax}
+                      onChange={(v) => setSpanMax(v)} style={{ width: 90 }} size="small" />
                   </Col>
 
                   {/* AC值 */}
                   <Col xs={24} sm={12} lg={6}>
                     <div className="mb-1">{labelWithTip("AC值", "ac")}</div>
-                    <InputNumber
-                      placeholder="最小" min={0} max={10} value={acMin}
-                      onChange={(v) => setAcMin(v)} style={{ width: 90 }} size="small"
-                    />
+                    <InputNumber placeholder="最小" min={0} max={10} value={acMin}
+                      onChange={(v) => setAcMin(v)} style={{ width: 90 }} size="small" />
                     <span className="mx-2 text-gray-400">-</span>
-                    <InputNumber
-                      placeholder="最大" min={0} max={10} value={acMax}
-                      onChange={(v) => setAcMax(v)} style={{ width: 90 }} size="small"
-                    />
+                    <InputNumber placeholder="最大" min={0} max={10} value={acMax}
+                      onChange={(v) => setAcMax(v)} style={{ width: 90 }} size="small" />
                   </Col>
 
                   {/* 大小比 */}
                   <Col xs={24} sm={12} lg={6}>
                     <div className="mb-1">{labelWithTip("大小比", "big_small")}</div>
-                    <Checkbox.Group
+                    <Select
+                      {...selectProps}
+                      value={bigSmall}
+                      onChange={(v) => setBigSmall(v)}
                       options={BIG_SMALL_OPTIONS.map((v) => ({ label: v, value: v }))}
-                      value={bigSmall} onChange={(v) => setBigSmall(v as string[])}
                     />
                   </Col>
 
                   {/* 奇偶比 */}
                   <Col xs={24} sm={12} lg={6}>
                     <div className="mb-1">{labelWithTip("奇偶比", "odd_even")}</div>
-                    <Checkbox.Group
+                    <Select
+                      {...selectProps}
+                      value={oddEven}
+                      onChange={(v) => setOddEven(v)}
                       options={ODD_EVEN_OPTIONS.map((v) => ({ label: v, value: v }))}
-                      value={oddEven} onChange={(v) => setOddEven(v as string[])}
                     />
                   </Col>
 
                   {/* 三区比 */}
                   <Col xs={24} sm={12} lg={12}>
                     <div className="mb-1">{labelWithTip("三区比", "three_zone")}</div>
-                    <Checkbox.Group
+                    <Select
+                      {...selectProps}
+                      value={threeZone}
+                      onChange={(v) => setThreeZone(v)}
                       options={THREE_ZONE_OPTIONS.map((v) => ({ label: v, value: v }))}
-                      value={threeZone} onChange={(v) => setThreeZone(v as string[])}
                     />
                   </Col>
 
                   {/* 012路比 */}
                   <Col xs={24} sm={12} lg={12}>
                     <div className="mb-1">{labelWithTip("012路比", "route_012")}</div>
-                    <Checkbox.Group
+                    <Select
+                      {...selectProps}
+                      value={route012}
+                      onChange={(v) => setRoute012(v)}
                       options={ROUTE_012_OPTIONS.map((v) => ({ label: v, value: v }))}
-                      value={route012} onChange={(v) => setRoute012(v as string[])}
                     />
                   </Col>
                 </Row>
@@ -259,7 +268,7 @@ export default function SearchPage() {
           <div className="flex items-center justify-between mb-3">
             <Title level={5} className="!mb-0">
               查询结果
-              {total > 0 && (
+              {hasSearched && (
                 <Tag color="blue" className="ml-2">{total.toLocaleString()} 条</Tag>
               )}
             </Title>
@@ -271,15 +280,15 @@ export default function SearchPage() {
             loading={loading}
             scroll={{ x: 1000 }}
             size="small"
-            pagination={{
+            pagination={hasSearched ? {
               current: page,
               pageSize,
               total,
               showSizeChanger: true,
               pageSizeOptions: ["10", "30", "50", "100"],
               showTotal: (t) => `共 ${t.toLocaleString()} 条`,
-              onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-            }}
+              onChange: (p, ps) => handlePageChange(p, ps),
+            } : false}
           />
         </Card>
       </div>
