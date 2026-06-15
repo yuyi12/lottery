@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table, Button, InputNumber, Select, Card, Row, Col, Space,
-  Tooltip, message, Tag, Collapse, Typography,
+  Tooltip, message, Tag, Typography,
 } from "antd";
 import { SearchOutlined, ReloadOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { RedBalls } from "@/components/ball";
@@ -181,97 +181,92 @@ export default function SearchPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="p-4 max-w-screen-2xl mx-auto">
         {/* 筛选面板 */}
-        <Card size="small" className="mb-4">
-          <Collapse
-            defaultActiveKey={["filters"]}
-            items={[{
-              key: "filters",
-              label: <span className="font-medium">技术指标筛选</span>,
-              extra: (
-                <Space>
-                  <Button icon={<ReloadOutlined />} size="small" onClick={handleReset}>重置</Button>
-                  <Button type="primary" icon={<SearchOutlined />} size="small" onClick={handleSearch}>查询</Button>
-                </Space>
-              ),
-              children: (
-                <Row gutter={[16, 12]}>
-                  {/* 和值 */}
-                  <Col xs={24} sm={12} lg={6}>
-                    <div className="mb-1">{labelWithTip("和值", "sum")}</div>
-                    <InputNumber placeholder="最小" min={21} max={183} value={sumMin}
-                      onChange={(v) => setSumMin(v)} style={{ width: 90 }} size="small" />
-                    <span className="mx-2 text-gray-400">-</span>
-                    <InputNumber placeholder="最大" min={21} max={183} value={sumMax}
-                      onChange={(v) => setSumMax(v)} style={{ width: 90 }} size="small" />
-                  </Col>
+        <Card
+          size="small"
+          className="mb-4"
+          title={<span className="font-medium">技术指标筛选</span>}
+          extra={
+            <Space>
+              <Button icon={<ReloadOutlined />} size="small" onClick={handleReset}>重置</Button>
+              <Button type="primary" icon={<SearchOutlined />} size="small" onClick={handleSearch}>查询</Button>
+            </Space>
+          }
+        >
+          <Row gutter={[16, 12]}>
+            {/* 和值 */}
+            <Col xs={24} sm={12} lg={6}>
+              <div className="mb-1">{labelWithTip("和值", "sum")}</div>
+              <InputNumber placeholder="最小" min={21} max={183} value={sumMin}
+                onChange={(v) => setSumMin(v)} style={{ width: 90 }} size="small" />
+              <span className="mx-2 text-gray-400">-</span>
+              <InputNumber placeholder="最大" min={21} max={183} value={sumMax}
+                onChange={(v) => setSumMax(v)} style={{ width: 90 }} size="small" />
+            </Col>
 
-                  {/* 跨度 */}
-                  <Col xs={24} sm={12} lg={6}>
-                    <div className="mb-1">{labelWithTip("跨度", "span")}</div>
-                    <InputNumber placeholder="最小" min={5} max={32} value={spanMin}
-                      onChange={(v) => setSpanMin(v)} style={{ width: 90 }} size="small" />
-                    <span className="mx-2 text-gray-400">-</span>
-                    <InputNumber placeholder="最大" min={5} max={32} value={spanMax}
-                      onChange={(v) => setSpanMax(v)} style={{ width: 90 }} size="small" />
-                  </Col>
+            {/* 跨度 */}
+            <Col xs={24} sm={12} lg={6}>
+              <div className="mb-1">{labelWithTip("跨度", "span")}</div>
+              <InputNumber placeholder="最小" min={5} max={32} value={spanMin}
+                onChange={(v) => setSpanMin(v)} style={{ width: 90 }} size="small" />
+              <span className="mx-2 text-gray-400">-</span>
+              <InputNumber placeholder="最大" min={5} max={32} value={spanMax}
+                onChange={(v) => setSpanMax(v)} style={{ width: 90 }} size="small" />
+            </Col>
 
-                  {/* AC值 */}
-                  <Col xs={24} sm={12} lg={6}>
-                    <div className="mb-1">{labelWithTip("AC值", "ac")}</div>
-                    <InputNumber placeholder="最小" min={0} max={10} value={acMin}
-                      onChange={(v) => setAcMin(v)} style={{ width: 90 }} size="small" />
-                    <span className="mx-2 text-gray-400">-</span>
-                    <InputNumber placeholder="最大" min={0} max={10} value={acMax}
-                      onChange={(v) => setAcMax(v)} style={{ width: 90 }} size="small" />
-                  </Col>
+            {/* AC值 */}
+            <Col xs={24} sm={12} lg={6}>
+              <div className="mb-1">{labelWithTip("AC值", "ac")}</div>
+              <InputNumber placeholder="最小" min={0} max={10} value={acMin}
+                onChange={(v) => setAcMin(v)} style={{ width: 90 }} size="small" />
+              <span className="mx-2 text-gray-400">-</span>
+              <InputNumber placeholder="最大" min={0} max={10} value={acMax}
+                onChange={(v) => setAcMax(v)} style={{ width: 90 }} size="small" />
+            </Col>
 
-                  {/* 大小比 */}
-                  <Col xs={24} sm={12} lg={6}>
-                    <div className="mb-1">{labelWithTip("大小比", "big_small")}</div>
-                    <Select
-                      {...selectProps}
-                      value={bigSmall}
-                      onChange={(v) => setBigSmall(v)}
-                      options={BIG_SMALL_OPTIONS.map((v) => ({ label: v, value: v }))}
-                    />
-                  </Col>
+            {/* 大小比 */}
+            <Col xs={24} sm={12} lg={6}>
+              <div className="mb-1">{labelWithTip("大小比", "big_small")}</div>
+              <Select
+                {...selectProps}
+                value={bigSmall}
+                onChange={(v) => setBigSmall(v)}
+                options={BIG_SMALL_OPTIONS.map((v) => ({ label: v, value: v }))}
+              />
+            </Col>
 
-                  {/* 奇偶比 */}
-                  <Col xs={24} sm={12} lg={6}>
-                    <div className="mb-1">{labelWithTip("奇偶比", "odd_even")}</div>
-                    <Select
-                      {...selectProps}
-                      value={oddEven}
-                      onChange={(v) => setOddEven(v)}
-                      options={ODD_EVEN_OPTIONS.map((v) => ({ label: v, value: v }))}
-                    />
-                  </Col>
+            {/* 奇偶比 */}
+            <Col xs={24} sm={12} lg={6}>
+              <div className="mb-1">{labelWithTip("奇偶比", "odd_even")}</div>
+              <Select
+                {...selectProps}
+                value={oddEven}
+                onChange={(v) => setOddEven(v)}
+                options={ODD_EVEN_OPTIONS.map((v) => ({ label: v, value: v }))}
+              />
+            </Col>
 
-                  {/* 三区比 */}
-                  <Col xs={24} sm={12} lg={12}>
-                    <div className="mb-1">{labelWithTip("三区比", "three_zone")}</div>
-                    <Select
-                      {...selectProps}
-                      value={threeZone}
-                      onChange={(v) => setThreeZone(v)}
-                      options={THREE_ZONE_OPTIONS.map((v) => ({ label: v, value: v }))}
-                    />
-                  </Col>
+            {/* 三区比 */}
+            <Col xs={24} sm={12} lg={12}>
+              <div className="mb-1">{labelWithTip("三区比", "three_zone")}</div>
+              <Select
+                {...selectProps}
+                value={threeZone}
+                onChange={(v) => setThreeZone(v)}
+                options={THREE_ZONE_OPTIONS.map((v) => ({ label: v, value: v }))}
+              />
+            </Col>
 
-                  {/* 012路比 */}
-                  <Col xs={24} sm={12} lg={12}>
-                    <div className="mb-1">{labelWithTip("012路比", "route_012")}</div>
-                    <Select
-                      {...selectProps}
-                      value={route012}
-                      onChange={(v) => setRoute012(v)}
-                      options={ROUTE_012_OPTIONS.map((v) => ({ label: v, value: v }))}
-                    />
-                  </Col>
-                </Row>
-              ),
-            }]}
-          />
+            {/* 012路比 */}
+            <Col xs={24} sm={12} lg={12}>
+              <div className="mb-1">{labelWithTip("012路比", "route_012")}</div>
+              <Select
+                {...selectProps}
+                value={route012}
+                onChange={(v) => setRoute012(v)}
+                options={ROUTE_012_OPTIONS.map((v) => ({ label: v, value: v }))}
+              />
+            </Col>
+          </Row>
         </Card>
 
         {/* 结果表格 */}
