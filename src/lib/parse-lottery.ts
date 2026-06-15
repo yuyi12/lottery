@@ -1,4 +1,4 @@
-interface ParsedRecord {
+export interface ParsedRecord {
   code: string;
   date: string;
   reds: number[];
