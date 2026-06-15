@@ -33,6 +33,9 @@ model LotteryRecord {
   threeZoneRatio String   @map("three_zone_ratio")
   acValue        Int      @map("ac_value")
   route012Ratio  String   @map("route_012_ratio")
+  prizegrades    Json?    @map("prizegrades") @db.JsonB
+  content        String?
+  poolmoney      String?
 
   @@map("lottery_records")
 }

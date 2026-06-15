@@ -40,7 +40,15 @@ export default function AddRecordModal({
         return;
       }
 
-      message.success(`期号 ${data.code} 新增成功`);
+      // 批量结果
+      const count = data.total || 0;
+      const ins = data.inserted || 0;
+      const upd = data.updated || 0;
+      if (count > 1) {
+        message.success(`批量处理完成：共 ${count} 条，新增 ${ins} 条，更新 ${upd} 条`);
+      } else {
+        message.success(`期号 ${data.results?.[0]?.code || "?"} ${ins > 0 ? "新增" : "更新"}成功`);
+      }
       setJsonText("");
       onSuccess();
     } catch {
@@ -72,8 +80,9 @@ export default function AddRecordModal({
           粘贴原始 JSON 数据，支持以下格式：
         </p>
         <ul className="text-gray-400 text-xs mb-3 list-disc pl-4 space-y-1">
-          <li>直接格式: &#123;&quot;code&quot;:&quot;2026067&quot;,&quot;date&quot;:&quot;2026-06-14&quot;,&quot;red&quot;:&quot;04,19,27,29,30,32&quot;,&quot;blue&quot;:&quot;13&quot;&#125;</li>
-          <li>封装格式: 含 result 数组的完整响应 JSON</li>
+          <li>直接格式: 单个记录的 JSON 对象</li>
+          <li>封装格式: 含 result 数组的完整响应 JSON（支持批量导入）</li>
+          <li>重复期号自动更新，不重复则新增</li>
         </ul>
         <TextArea
           value={jsonText}

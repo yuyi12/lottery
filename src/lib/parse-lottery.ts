@@ -3,15 +3,20 @@ export interface ParsedRecord {
   date: string;
   reds: number[];
   blue: number;
+  prizegrades?: any;
+  content?: string;
+  poolmoney?: string;
 }
 
 /**
- * 解析录入的 JSON 字符串
+ * 解析录入的 JSON 字符串，返回所有记录（支持批量）
  * 支持两种格式：
- * 1. 直接格式: { code, date, red, blue }
- * 2. 封装格式: { state, result: [{ code, date, red, blue, ... }] }
+ * 1. 直接格式: { code, date, red, blue, ... }
+ * 2. 封装格式: { state, result: [{ code, date, red, blue, ... }, ...] }
+ *
+ * 对于封装格式，会解析 result 数组中的所有条目（批量导入）
  */
-export function parseLotteryJson(jsonStr: string): ParsedRecord {
+export function parseLotteryJsonBatch(jsonStr: string): ParsedRecord[] {
   let data: any;
 
   try {
@@ -20,11 +25,24 @@ export function parseLotteryJson(jsonStr: string): ParsedRecord {
     throw new Error("JSON 格式无效");
   }
 
-  // 封装格式：提取 result[0]
+  // 封装格式：提取 result 数组中的所有条目
   if (data.result && Array.isArray(data.result) && data.result.length > 0) {
-    data = data.result[0];
+    return data.result.map((item: any) => parseSingleRecord(item));
   }
 
+  // 直接格式：单个记录
+  return [parseSingleRecord(data)];
+}
+
+/**
+ * 解析单个记录（保留向后兼容）
+ */
+export function parseLotteryJson(jsonStr: string): ParsedRecord {
+  const records = parseLotteryJsonBatch(jsonStr);
+  return records[0];
+}
+
+function parseSingleRecord(data: any): ParsedRecord {
   if (!data.code) {
     throw new Error("缺少期号 (code) 字段");
   }
@@ -69,7 +87,12 @@ export function parseLotteryJson(jsonStr: string): ParsedRecord {
   // 解析日期
   const date = parseDateString(data.date);
 
-  return { code, date, reds, blue };
+  // 提取扩展字段
+  const prizegrades = data.prizegrades || null;
+  const content = data.content ? String(data.content) : undefined;
+  const poolmoney = data.poolmoney ? String(data.poolmoney) : undefined;
+
+  return { code, date, reds, blue, prizegrades, content, poolmoney };
 }
 
 function parseNumberList(str: string): number[] {

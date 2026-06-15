@@ -16,6 +16,15 @@ export interface LotteryRecord {
   threeZoneRatio: string;
   acValue: number;
   route012Ratio: string;
+  prizegrades?: any;
+  content?: string;
+  poolmoney?: string;
+}
+
+export interface PrizeGrade {
+  type: number;
+  typenum: string;
+  typemoney: string;
 }
 
 export interface CreateRecordInput {

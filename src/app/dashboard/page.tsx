@@ -7,15 +7,14 @@ import {
   Button,
   Input,
   DatePicker,
-  Space,
   message,
-  Popconfirm,
   Typography,
   Card,
 } from "antd";
-import { PlusOutlined, LogoutOutlined, SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, LogoutOutlined, SearchOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { RedBalls, BlueBall } from "@/components/ball";
 import AddRecordModal from "@/components/add-record-modal";
+import DetailModal from "@/components/detail-modal";
 import dayjs from "dayjs";
 
 const { Title } = Typography;
@@ -39,6 +38,9 @@ interface RecordItem {
   threeZoneRatio: string;
   acValue: number;
   route012Ratio: string;
+  prizegrades?: any;
+  content?: string;
+  poolmoney?: string;
 }
 
 export default function DashboardPage() {
@@ -49,6 +51,10 @@ export default function DashboardPage() {
   const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // 详情弹窗
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailRecord, setDetailRecord] = useState<RecordItem | null>(null);
 
   // 筛选条件
   const [searchCode, setSearchCode] = useState("");
@@ -94,19 +100,9 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      const res = await fetch(`/api/records/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (res.ok) {
-        message.success("删除成功");
-        fetchRecords();
-      } else {
-        message.error(data.error || "删除失败");
-      }
-    } catch {
-      message.error("网络错误");
-    }
+  const handleDetail = (record: RecordItem) => {
+    setDetailRecord(record);
+    setDetailOpen(true);
   };
 
   const columns = [
@@ -200,17 +196,14 @@ export default function DashboardPage() {
       width: 80,
       fixed: "right" as const,
       render: (_: any, record: RecordItem) => (
-        <Popconfirm
-          title="确认删除"
-          description={`确定删除期号 ${record.code} 的记录吗？`}
-          onConfirm={() => handleDelete(record.id)}
-          okText="确定"
-          cancelText="取消"
+        <Button
+          type="link"
+          icon={<InfoCircleOutlined />}
+          size="small"
+          onClick={() => handleDetail(record)}
         >
-          <Button type="link" danger size="small">
-            删除
-          </Button>
-        </Popconfirm>
+          详情
+        </Button>
       ),
     },
   ];
@@ -298,6 +291,12 @@ export default function DashboardPage() {
           setModalOpen(false);
           fetchRecords();
         }}
+      />
+
+      <DetailModal
+        open={detailOpen}
+        record={detailRecord}
+        onClose={() => setDetailOpen(false)}
       />
     </div>
   );
