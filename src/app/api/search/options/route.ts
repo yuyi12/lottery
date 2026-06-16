@@ -1,39 +1,39 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
+
+const RATIO_COLS = [
+  { key: "bigSmall", col: "big_small_ratio" },
+  { key: "oddEven", col: "odd_even_ratio" },
+  { key: "threeZone", col: "three_zone_ratio" },
+  { key: "route012", col: "route_012_ratio" },
+];
 
 export async function GET() {
   try {
-    const [bigSmall, oddEven, threeZone, route012] = await Promise.all([
-      prisma.allLotteryRecord.findMany({
-        select: { bigSmallRatio: true },
-        distinct: ["bigSmallRatio"],
-        orderBy: { bigSmallRatio: "asc" },
-      }),
-      prisma.allLotteryRecord.findMany({
-        select: { oddEvenRatio: true },
-        distinct: ["oddEvenRatio"],
-        orderBy: { oddEvenRatio: "asc" },
-      }),
-      prisma.allLotteryRecord.findMany({
-        select: { threeZoneRatio: true },
-        distinct: ["threeZoneRatio"],
-        orderBy: { threeZoneRatio: "asc" },
-      }),
-      prisma.allLotteryRecord.findMany({
-        select: { route012Ratio: true },
-        distinct: ["route012Ratio"],
-        orderBy: { route012Ratio: "asc" },
-      }),
-    ]);
+    const result: any = {};
 
+    for (const { key, col } of RATIO_COLS) {
+      // Supabase JS doesn't have DISTINCT, so fetch all and deduplicate
+      const { data } = await supabaseAdmin
+        .from("all_lottery_records")
+        .select(col)
+        .limit(1000);
+
+      const seen = new Set<string>();
+      result[key] = [];
+      for (const r of data || []) {
+        const v = (r as any)[col];
+        if (v && !seen.has(v)) {
+          seen.add(v);
+          result[key].push(v);
+        }
+      }
+    }
+
+    return NextResponse.json(result);
+  } catch {
     return NextResponse.json({
-      bigSmall: bigSmall.map((r) => r.bigSmallRatio),
-      oddEven: oddEven.map((r) => r.oddEvenRatio),
-      threeZone: threeZone.map((r) => r.threeZoneRatio),
-      route012: route012.map((r) => r.route012Ratio),
+      bigSmall: [], oddEven: [], threeZone: [], route012: [],
     });
-  } catch (error) {
-    console.error("Options error:", error);
-    return NextResponse.json({ error: "获取选项失败" }, { status: 500 });
   }
 }

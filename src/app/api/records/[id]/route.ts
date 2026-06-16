@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function DELETE(
   request: NextRequest,
@@ -7,21 +7,20 @@ export async function DELETE(
 ) {
   try {
     const id = Number(params.id);
-
     if (isNaN(id)) {
       return NextResponse.json({ error: "无效的 ID" }, { status: 400 });
     }
 
-    const record = await prisma.lotteryRecord.findUnique({ where: { id } });
-    if (!record) {
-      return NextResponse.json({ error: "记录不存在" }, { status: 404 });
-    }
+    const { error } = await supabaseAdmin
+      .from("lottery_records")
+      .delete()
+      .eq("id", id);
 
-    await prisma.lotteryRecord.delete({ where: { id } });
+    if (error) throw new Error(error.message);
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Delete record error:", error);
+  } catch (err: any) {
+    console.error("Delete error:", err);
     return NextResponse.json({ error: "删除失败" }, { status: 500 });
   }
 }

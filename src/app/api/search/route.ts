@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
+
+function fmt(r: any) {
+  return {
+    id: r.id, red1: r.red1, red2: r.red2, red3: r.red3,
+    red4: r.red4, red5: r.red5, red6: r.red6,
+    sumValue: r.sum_value, bigSmallRatio: r.big_small_ratio,
+    oddEvenRatio: r.odd_even_ratio, span: r.span,
+    threeZoneRatio: r.three_zone_ratio, acValue: r.ac_value,
+    route012Ratio: r.route_012_ratio,
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,137 +18,73 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize")) || 30));
 
-    const where: any = { AND: [] };
+    let query = supabaseAdmin.from("all_lottery_records").select("*", { count: "exact" });
 
-    // 和值范围
+    // 范围筛选
     const sumMin = searchParams.get("sum_min");
     const sumMax = searchParams.get("sum_max");
-    if (sumMin || sumMax) {
-      const cond: any = {};
-      if (sumMin) cond.gte = Number(sumMin);
-      if (sumMax) cond.lte = Number(sumMax);
-      where.AND.push({ sumValue: cond });
-    }
+    if (sumMin) query = query.gte("sum_value", Number(sumMin));
+    if (sumMax) query = query.lte("sum_value", Number(sumMax));
 
-    // 跨度范围
     const spanMin = searchParams.get("span_min");
     const spanMax = searchParams.get("span_max");
-    if (spanMin || spanMax) {
-      const cond: any = {};
-      if (spanMin) cond.gte = Number(spanMin);
-      if (spanMax) cond.lte = Number(spanMax);
-      where.AND.push({ span: cond });
-    }
+    if (spanMin) query = query.gte("span", Number(spanMin));
+    if (spanMax) query = query.lte("span", Number(spanMax));
 
-    // AC值范围
     const acMin = searchParams.get("ac_min");
     const acMax = searchParams.get("ac_max");
-    if (acMin || acMax) {
-      const cond: any = {};
-      if (acMin) cond.gte = Number(acMin);
-      if (acMax) cond.lte = Number(acMax);
-      where.AND.push({ acValue: cond });
-    }
+    if (acMin) query = query.gte("ac_value", Number(acMin));
+    if (acMax) query = query.lte("ac_value", Number(acMax));
 
-    // 大小比（多选）
-    const bigSmall = searchParams.get("big_small");
-    if (bigSmall) {
-      const values = bigSmall.split(",").filter(Boolean);
-      if (values.length > 0) {
-        where.AND.push({ bigSmallRatio: { in: values } });
+    // 多选
+    const filterIn = (param: string, col: string) => {
+      const v = searchParams.get(param);
+      if (v) {
+        const vals = v.split(",").filter(Boolean);
+        if (vals.length > 0) query = query.in(col, vals);
       }
-    }
+    };
+    filterIn("big_small", "big_small_ratio");
+    filterIn("odd_even", "odd_even_ratio");
+    filterIn("three_zone", "three_zone_ratio");
+    filterIn("route_012", "route_012_ratio");
 
-    // 奇偶比（多选）
-    const oddEven = searchParams.get("odd_even");
-    if (oddEven) {
-      const values = oddEven.split(",").filter(Boolean);
-      if (values.length > 0) {
-        where.AND.push({ oddEvenRatio: { in: values } });
-      }
-    }
-
-    // 三区比（多选）
-    const threeZone = searchParams.get("three_zone");
-    if (threeZone) {
-      const values = threeZone.split(",").filter(Boolean);
-      if (values.length > 0) {
-        where.AND.push({ threeZoneRatio: { in: values } });
-      }
-    }
-
-    // 012路比（多选）
-    const route012 = searchParams.get("route_012");
-    if (route012) {
-      const values = route012.split(",").filter(Boolean);
-      if (values.length > 0) {
-        where.AND.push({ route012Ratio: { in: values } });
-      }
-    }
-
-    // 红球包含（多选）：每个选中号码必须在某列中出现
+    // 红球包含
     const include = searchParams.get("include");
     if (include) {
       const nums = include.split(",").filter(Boolean).map(Number);
       for (const n of nums) {
-        where.AND.push({
-          OR: [
-            { red1: n }, { red2: n }, { red3: n },
-            { red4: n }, { red5: n }, { red6: n },
-          ],
-        });
+        query = query.or(`red1.eq.${n},red2.eq.${n},red3.eq.${n},red4.eq.${n},red5.eq.${n},red6.eq.${n}`);
       }
     }
 
-    // 红球排除（多选）：选中号码不能在任何列出现
+    // 红球排除
     const exclude = searchParams.get("exclude");
     if (exclude) {
       const nums = exclude.split(",").filter(Boolean).map(Number);
-      where.AND.push({
-        AND: [
-          { red1: { notIn: nums } },
-          { red2: { notIn: nums } },
-          { red3: { notIn: nums } },
-          { red4: { notIn: nums } },
-          { red5: { notIn: nums } },
-          { red6: { notIn: nums } },
-        ],
-      });
+      for (const n of nums) {
+        query = query.neq("red1", n).neq("red2", n).neq("red3", n)
+          .neq("red4", n).neq("red5", n).neq("red6", n);
+      }
     }
 
-    // 清理空的 AND
-    if (where.AND.length === 0) delete where.AND;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
 
-    const [data, total] = await Promise.all([
-      prisma.allLotteryRecord.findMany({
-        where,
-        orderBy: { id: "asc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      prisma.allLotteryRecord.count({ where }),
-    ]);
+    const { data, error, count } = await query
+      .order("id")
+      .range(from, to);
 
-    const records = data.map((r) => ({
-      id: r.id,
-      red1: r.red1,
-      red2: r.red2,
-      red3: r.red3,
-      red4: r.red4,
-      red5: r.red5,
-      red6: r.red6,
-      sumValue: r.sumValue,
-      bigSmallRatio: r.bigSmallRatio,
-      oddEvenRatio: r.oddEvenRatio,
-      span: r.span,
-      threeZoneRatio: r.threeZoneRatio,
-      acValue: r.acValue,
-      route012Ratio: r.route012Ratio,
-    }));
+    if (error) throw new Error(error.message);
 
-    return NextResponse.json({ data: records, total, page, pageSize });
-  } catch (error) {
-    console.error("Search error:", error);
+    return NextResponse.json({
+      data: (data || []).map(fmt),
+      total: count || 0,
+      page,
+      pageSize,
+    });
+  } catch (err: any) {
+    console.error("Search error:", err);
     return NextResponse.json({ error: "查询失败" }, { status: 500 });
   }
 }

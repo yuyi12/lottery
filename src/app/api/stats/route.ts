@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,103 +9,52 @@ export async function GET(request: NextRequest) {
     const codeFrom = searchParams.get("codeFrom") || "";
     const codeTo = searchParams.get("codeTo") || "";
 
-    // Build WHERE clause fragments
-    const conditions: string[] = [];
-    const params: any[] = [];
+    let query = supabaseAdmin.from("lottery_records").select("*", { count: "exact" });
+    if (dateFrom) query = query.gte("draw_date", dateFrom);
+    if (dateTo) query = query.lte("draw_date", dateTo);
+    if (codeFrom) query = query.gte("code", codeFrom);
+    if (codeTo) query = query.lte("code", codeTo);
 
-    if (dateFrom) {
-      params.push(dateFrom);
-      conditions.push(`draw_date >= $${params.length}::date`);
-    }
-    if (dateTo) {
-      params.push(dateTo);
-      conditions.push(`draw_date <= $${params.length}::date`);
-    }
-    if (codeFrom) {
-      params.push(codeFrom);
-      conditions.push(`code >= $${params.length}`);
-    }
-    if (codeTo) {
-      params.push(codeTo);
-      conditions.push(`code <= $${params.length}`);
+    // 分批获取所有记录
+    const allRows: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data, error } = await query.range(from, from + batchSize - 1);
+      if (error) throw new Error(error.message);
+      if (!data || data.length === 0) break;
+      allRows.push(...data);
+      if (data.length < batchSize) break;
+      from += batchSize;
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-
-    // 和值分布
-    const sumDistribution = await prisma.$queryRawUnsafe(
-      `SELECT sum_value as value, COUNT(*)::int as count
-       FROM lottery_records ${whereClause}
-       GROUP BY sum_value ORDER BY sum_value`,
-      ...params,
-    );
-
-    // 跨度分布
-    const spanDistribution = await prisma.$queryRawUnsafe(
-      `SELECT span as value, COUNT(*)::int as count
-       FROM lottery_records ${whereClause}
-       GROUP BY span ORDER BY span`,
-      ...params,
-    );
-
-    // AC值分布
-    const acDistribution = await prisma.$queryRawUnsafe(
-      `SELECT ac_value as value, COUNT(*)::int as count
-       FROM lottery_records ${whereClause}
-       GROUP BY ac_value ORDER BY ac_value`,
-      ...params,
-    );
-
-    // 大小比分布
-    const bigSmallDistribution = await prisma.$queryRawUnsafe(
-      `SELECT big_small_ratio as label, COUNT(*)::int as count
-       FROM lottery_records ${whereClause}
-       GROUP BY big_small_ratio ORDER BY big_small_ratio`,
-      ...params,
-    );
-
-    // 奇偶比分布
-    const oddEvenDistribution = await prisma.$queryRawUnsafe(
-      `SELECT odd_even_ratio as label, COUNT(*)::int as count
-       FROM lottery_records ${whereClause}
-       GROUP BY odd_even_ratio ORDER BY odd_even_ratio`,
-      ...params,
-    );
-
-    // 三区比分布
-    const threeZoneDistribution = await prisma.$queryRawUnsafe(
-      `SELECT three_zone_ratio as label, COUNT(*)::int as count
-       FROM lottery_records ${whereClause}
-       GROUP BY three_zone_ratio ORDER BY three_zone_ratio`,
-      ...params,
-    );
-
-    // 012路比分布
-    const route012Distribution = await prisma.$queryRawUnsafe(
-      `SELECT route_012_ratio as label, COUNT(*)::int as count
-       FROM lottery_records ${whereClause}
-       GROUP BY route_012_ratio ORDER BY route_012_ratio`,
-      ...params,
-    );
-
-    // 总记录数
-    const totalResult = await prisma.$queryRawUnsafe(
-      `SELECT COUNT(*)::int as total FROM lottery_records ${whereClause}`,
-      ...params,
-    ) as any[];
+    // 聚合函数
+    const groupBy = <T extends Record<string, any>>(rows: any[], key: string, labelKey: string, valueKey: string) => {
+      const map = new Map<any, number>();
+      for (const r of rows) {
+        const v = r[key];
+        map.set(v, (map.get(v) || 0) + 1);
+      }
+      return Array.from(map.entries())
+        .map(([value, count]) => ({ [labelKey]: value, [valueKey]: count }))
+        .sort((a, b) => {
+          const va = a[labelKey], vb = b[labelKey];
+          return typeof va === "number" ? va - vb : String(va).localeCompare(String(vb));
+        });
+    };
 
     return NextResponse.json({
-      total: totalResult[0]?.total || 0,
-      sumDistribution,
-      spanDistribution,
-      acDistribution,
-      bigSmallDistribution,
-      oddEvenDistribution,
-      threeZoneDistribution,
-      route012Distribution,
+      total: allRows.length,
+      sumDistribution: groupBy(allRows, "sum_value", "value", "count"),
+      spanDistribution: groupBy(allRows, "span", "value", "count"),
+      acDistribution: groupBy(allRows, "ac_value", "value", "count"),
+      bigSmallDistribution: groupBy(allRows, "big_small_ratio", "label", "count"),
+      oddEvenDistribution: groupBy(allRows, "odd_even_ratio", "label", "count"),
+      threeZoneDistribution: groupBy(allRows, "three_zone_ratio", "label", "count"),
+      route012Distribution: groupBy(allRows, "route_012_ratio", "label", "count"),
     });
-  } catch (error) {
-    console.error("Stats error:", error);
+  } catch (err: any) {
+    console.error("Stats error:", err);
     return NextResponse.json({ error: "统计查询失败" }, { status: 500 });
   }
 }
