@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/password";
-import { signToken } from "@/lib/jwt";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,19 +18,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "密码至少 6 位" }, { status: 400 });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json({ error: "该邮箱已注册" }, { status: 409 });
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      if (error.message?.includes("already") || error.message?.includes("exist")) {
+        return NextResponse.json({ error: "该邮箱已注册" }, { status: 409 });
+      }
+      return NextResponse.json({ error: error.message || "注册失败" }, { status: 400 });
     }
 
-    const passwordHash = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: { email, passwordHash },
+    return NextResponse.json({
+      token: data.session?.access_token || "",
+      refreshToken: data.session?.refresh_token || "",
+      email: data.user?.email || email,
     });
-
-    const token = await signToken(user.id, user.email);
-
-    return NextResponse.json({ token, email: user.email });
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json({ error: "注册失败" }, { status: 500 });

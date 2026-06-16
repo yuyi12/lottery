@@ -33,6 +33,9 @@ export default function LoginPage() {
 
       // 存 token 到 cookie
       document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}`;
+      if (data.refreshToken) {
+        document.cookie = `refreshToken=${data.refreshToken}; path=/; max-age=${30 * 24 * 60 * 60}`;
+      }
 
       message.success(activeTab === "login" ? "登录成功" : "注册成功");
       router.push("/dashboard");
