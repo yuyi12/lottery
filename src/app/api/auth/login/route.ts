@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
+      return NextResponse.json({ error: error.message, code: error.code, status: error.status }, { status: 401 });
     }
 
     return NextResponse.json({
