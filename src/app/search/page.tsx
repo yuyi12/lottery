@@ -47,12 +47,12 @@ const ROUTE_012_OPTIONS = [
 ];
 
 const INDICATOR_TIPS: Record<string, string> = {
-  sum: "6个红球之和，范围21-183，90-110 (黄金区间)",
+  sum: "6个红球之和，范围21-183，75-130 (常见区间)",
   big_small: "大号(17-33):小号(01-16)",
   odd_even: "奇数:偶数",
-  span: "最大号-最小号，范围5-32，22-28 (常见)",
+  span: "最大号-最小号，范围5-32，20-30 (常见)",
   three_zone: "一区(01-11):二区(12-22):三区(23-33)",
-  ac: "号码离散度指标，范围0-10，黄金区间6-9",
+  ac: "号码离散度指标，范围0-10，常见区间6-10",
   route_012: "除3余0:除3余1:除3余2",
 };
 
@@ -75,16 +75,16 @@ export default function SearchPage() {
   const initialLoaded = useRef(false);
 
   // 筛选条件 — 初始默认值
-  const [sumMin, setSumMin] = useState<number | null>(90);
-  const [sumMax, setSumMax] = useState<number | null>(110);
-  const [spanMin, setSpanMin] = useState<number | null>(22);
-  const [spanMax, setSpanMax] = useState<number | null>(28);
+  const [sumMin, setSumMin] = useState<number | null>(75);
+  const [sumMax, setSumMax] = useState<number | null>(130);
+  const [spanMin, setSpanMin] = useState<number | null>(20);
+  const [spanMax, setSpanMax] = useState<number | null>(30);
   const [acMin, setAcMin] = useState<number | null>(6);
-  const [acMax, setAcMax] = useState<number | null>(9);
+  const [acMax, setAcMax] = useState<number | null>(10);
   const [bigSmall, setBigSmall] = useState<string[]>(["3:3", "4:2", "2:4"]);
   const [oddEven, setOddEven] = useState<string[]>(["3:3", "4:2", "2:4"]);
-  const [threeZone, setThreeZone] = useState<string[]>(["3:2:1", "2:2:2"]);
-  const [route012, setRoute012] = useState<string[]>(["3:2:1", "2:2:2"]);
+  const [threeZone, setThreeZone] = useState<string[]>(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
+  const [route012, setRoute012] = useState<string[]>(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
 
   // 初始化时自动查询一次
   useEffect(() => {
@@ -140,13 +140,13 @@ export default function SearchPage() {
   };
 
   const handleReset = () => {
-    setSumMin(90); setSumMax(110);
-    setSpanMin(22); setSpanMax(28);
-    setAcMin(6); setAcMax(9);
+    setSumMin(75); setSumMax(130);
+    setSpanMin(20); setSpanMax(30);
+    setAcMin(6); setAcMax(10);
     setBigSmall(["3:3", "4:2", "2:4"]);
     setOddEven(["3:3", "4:2", "2:4"]);
-    setThreeZone(["3:2:1", "2:2:2"]);
-    setRoute012(["3:2:1", "2:2:2"]);
+    setThreeZone(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
+    setRoute012(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
     setPage(1);
     doFetch(1, pageSize);
   };
