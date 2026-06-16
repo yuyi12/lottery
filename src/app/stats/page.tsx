@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card, Row, Col, DatePicker, Input, Button, Space, message, Typography, Tag, Spin,
+  Radio, Statistic,
 } from "antd";
 import { SearchOutlined, ReloadOutlined } from "@ant-design/icons";
 import {
@@ -11,6 +12,7 @@ import {
   Tooltip as ReTooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import dayjs from "dayjs";
+import WordCloud from "@/components/word-cloud";
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -93,6 +95,22 @@ export default function StatsPage() {
     setCodeTo("");
     setTimeout(() => fetchStats(), 0);
   };
+
+  // ---- 冷热号 ----
+  const [coldHot, setColdHot] = useState<any>(null);
+  const [periods, setPeriods] = useState(30);
+
+  const fetchColdHot = async (p?: number) => {
+    const n = p ?? periods;
+    try {
+      const res = await fetch(`/api/stats/cold-hot?periods=${n}`);
+      const data = await res.json();
+      if (res.ok) setColdHot(data);
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { fetchColdHot(); }, []);
+  // ------------------
 
   const chartHeight = 280;
 
@@ -238,6 +256,68 @@ export default function StatsPage() {
                         <Bar dataKey="count" fill="#722ed1" radius={[2, 2, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
+                  </Card>
+                </Col>
+              </Row>
+
+              {/* 冷热号分析 */}
+              <Row gutter={[12, 12]} className="mt-4">
+                <Col span={24}>
+                  <Card
+                    size="small"
+                    title="冷温热号码分析"
+                    extra={
+                      <Space>
+                        <Radio.Group
+                          value={periods}
+                          size="small"
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setPeriods(v);
+                            fetchColdHot(v);
+                          }}
+                        >
+                          <Radio.Button value={20}>短期(20)</Radio.Button>
+                          <Radio.Button value={50}>中期(50)</Radio.Button>
+                          <Radio.Button value={100}>长期(100)</Radio.Button>
+                        </Radio.Group>
+                      </Space>
+                    }
+                  >
+                    {coldHot && (
+                      <>
+                        <Row gutter={16} className="mb-4">
+                          <Col>
+                            <Statistic title="统计期数" value={coldHot.totalRecords} suffix="期" />
+                          </Col>
+                          <Col>
+                            <Statistic title="最新期号" value={coldHot.latestCode} />
+                          </Col>
+                          <Col>
+                            <Statistic title="红球理论均值" value={coldHot.redAvg} precision={1} suffix="次" />
+                          </Col>
+                          <Col>
+                            <Statistic title="蓝球理论均值" value={coldHot.blueAvg} precision={1} suffix="次" />
+                          </Col>
+                        </Row>
+                        <Row gutter={[16, 16]}>
+                          <Col xs={24} lg={16}>
+                            <WordCloud
+                              items={coldHot.redStats || []}
+                              type="red"
+                              title="红球冷温热分布 (01-33)"
+                            />
+                          </Col>
+                          <Col xs={24} lg={8}>
+                            <WordCloud
+                              items={coldHot.blueStats || []}
+                              type="blue"
+                              title="蓝球冷温热分布 (01-16)"
+                            />
+                          </Col>
+                        </Row>
+                      </>
+                    )}
                   </Card>
                 </Col>
               </Row>
