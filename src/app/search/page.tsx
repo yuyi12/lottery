@@ -85,6 +85,22 @@ export default function SearchPage() {
   const [oddEven, setOddEven] = useState<string[]>(["3:3", "4:2", "2:4"]);
   const [threeZone, setThreeZone] = useState<string[]>(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
   const [route012, setRoute012] = useState<string[]>(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
+  const [includeNums, setIncludeNums] = useState<number[]>([]);
+  const [excludeNums, setExcludeNums] = useState<number[]>([]);
+
+  // 互斥逻辑：已选包含的号码在排除中禁用，反之亦然
+  const redNumOptions = Array.from({ length: 33 }, (_, i) => ({
+    label: String(i + 1).padStart(2, "0"),
+    value: i + 1,
+  }));
+  const includeOptions = redNumOptions.map((o) => ({
+    ...o,
+    disabled: excludeNums.includes(o.value),
+  }));
+  const excludeOptions = redNumOptions.map((o) => ({
+    ...o,
+    disabled: includeNums.includes(o.value),
+  }));
 
   // 初始化时自动查询一次
   useEffect(() => {
@@ -110,6 +126,8 @@ export default function SearchPage() {
       if (oddEven.length > 0) params.set("odd_even", oddEven.join(","));
       if (threeZone.length > 0) params.set("three_zone", threeZone.join(","));
       if (route012.length > 0) params.set("route_012", route012.join(","));
+      if (includeNums.length > 0) params.set("include", includeNums.join(","));
+      if (excludeNums.length > 0) params.set("exclude", excludeNums.join(","));
 
       const res = await fetch(`/api/search?${params.toString()}`);
       if (res.status === 401) { router.push("/login"); return; }
@@ -126,7 +144,7 @@ export default function SearchPage() {
       setLoading(false);
     }
   }, [sumMin, sumMax, spanMin, spanMax, acMin, acMax,
-      bigSmall, oddEven, threeZone, route012, router]);
+      bigSmall, oddEven, threeZone, route012, includeNums, excludeNums, router]);
 
   const handleSearch = () => {
     setPage(1);
@@ -147,6 +165,8 @@ export default function SearchPage() {
     setOddEven(["3:3", "4:2", "2:4"]);
     setThreeZone(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
     setRoute012(["1:2:3", "1:3:2", "2:1:3", "2:2:2", "2:3:1", "3:1:2", "3:2:1"]);
+    setIncludeNums([]);
+    setExcludeNums([]);
     setPage(1);
     doFetch(1, pageSize);
   };
@@ -221,6 +241,28 @@ export default function SearchPage() {
               <span className="mx-2 text-gray-400">-</span>
               <InputNumber placeholder="最大" min={0} max={10} value={acMax}
                 onChange={(v) => setAcMax(v)} style={{ width: 90 }} size="small" />
+            </Col>
+
+            {/* 号码包含 */}
+            <Col xs={24} sm={12} lg={6}>
+              <div className="mb-1">包含号码 <span className="text-red-400 text-xs">(且)</span></div>
+              <Select
+                mode="multiple" allowClear maxTagCount={5} style={{ minWidth: 200 }}
+                size="small" placeholder="选择必须包含的红球"
+                value={includeNums} onChange={(v) => setIncludeNums(v)}
+                options={includeOptions}
+              />
+            </Col>
+
+            {/* 号码排除 */}
+            <Col xs={24} sm={12} lg={6}>
+              <div className="mb-1">排除号码 <span className="text-gray-400 text-xs">(互斥)</span></div>
+              <Select
+                mode="multiple" allowClear maxTagCount={5} style={{ minWidth: 200 }}
+                size="small" placeholder="选择必须排除的红球"
+                value={excludeNums} onChange={(v) => setExcludeNums(v)}
+                options={excludeOptions}
+              />
             </Col>
 
             {/* 大小比 */}

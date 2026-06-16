@@ -75,6 +75,36 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 红球包含（多选）：每个选中号码必须在某列中出现
+    const include = searchParams.get("include");
+    if (include) {
+      const nums = include.split(",").filter(Boolean).map(Number);
+      for (const n of nums) {
+        where.AND.push({
+          OR: [
+            { red1: n }, { red2: n }, { red3: n },
+            { red4: n }, { red5: n }, { red6: n },
+          ],
+        });
+      }
+    }
+
+    // 红球排除（多选）：选中号码不能在任何列出现
+    const exclude = searchParams.get("exclude");
+    if (exclude) {
+      const nums = exclude.split(",").filter(Boolean).map(Number);
+      where.AND.push({
+        AND: [
+          { red1: { notIn: nums } },
+          { red2: { notIn: nums } },
+          { red3: { notIn: nums } },
+          { red4: { notIn: nums } },
+          { red5: { notIn: nums } },
+          { red6: { notIn: nums } },
+        ],
+      });
+    }
+
     // 清理空的 AND
     if (where.AND.length === 0) delete where.AND;
 
