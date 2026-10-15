@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const PROTECTED_PATHS = ["/api/records", "/api/search", "/api/stats", "/dashboard", "/search", "/stats"];
+const PROTECTED_PATHS = ["/api/records", "/api/search", "/api/stats", "/api/plc", "/dashboard", "/search", "/stats", "/plc"];
 const AUTH_PAGE = "/login";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -10,7 +10,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
+  const isProtected =
+    pathname === "/" || PROTECTED_PATHS.some((p) => pathname.startsWith(p));
   if (!isProtected) {
     return NextResponse.next();
   }
@@ -47,5 +48,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/records/:path*", "/api/search/:path*", "/api/stats/:path*", "/dashboard/:path*", "/search/:path*", "/stats/:path*"],
+  matcher: ["/", "/api/records/:path*", "/api/search/:path*", "/api/stats/:path*", "/api/plc/:path*", "/dashboard/:path*", "/search/:path*", "/stats/:path*", "/plc/:path*"],
 };

@@ -2,21 +2,27 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { Button, Typography, Menu } from "antd";
-import { LogoutOutlined, HistoryOutlined, SearchOutlined, BarChartOutlined } from "@ant-design/icons";
+import { LogoutOutlined, HistoryOutlined, SearchOutlined, BarChartOutlined, AppstoreOutlined, CloudUploadOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
-export default function Header() {
+export default function Header({ title }: { title: string }) {
   const router = useRouter();
   const pathname = usePathname();
 
   const isAuthPage = pathname === "/login";
 
+  const isLotteryPage = ["/dashboard", "/search", "/stats"].some((p) =>
+    pathname.startsWith(p)
+  );
+
+  const isPlcPage = pathname.startsWith("/plc");
+
   if (isAuthPage) {
     return (
       <div className="bg-white shadow-sm px-6 py-4 flex items-center justify-center">
         <Title level={4} className="!mb-0">
-          双色球记录系统
+          {title}
         </Title>
       </div>
     );
@@ -45,20 +51,42 @@ export default function Header() {
     },
   ];
 
+  const plcMenuItems = [
+    {
+      key: "device-management",
+      icon: <AppstoreOutlined />,
+      label: "设备管理",
+      children: [
+        { key: "/plc/brand", label: "品牌" },
+        { key: "/plc/device-type", label: "设备类型" },
+        { key: "/plc/device-model", label: "设备型号" },
+      ],
+    },
+    {
+      key: "/plc/device-upgrade",
+      icon: <CloudUploadOutlined />,
+      label: "设备升级",
+    },
+  ];
+
   return (
     <div className="bg-white shadow-sm px-6 py-2 flex items-center justify-between">
       <div className="flex items-center gap-6">
         <Title level={4} className="!mb-0 whitespace-nowrap">
-          双色球记录系统
+          {title}
         </Title>
-        <Menu
-          mode="horizontal"
-          selectedKeys={[pathname]}
-          items={menuItems}
-          onClick={({ key }) => router.push(key)}
-          className="!border-b-0"
-          style={{ minWidth: 600 }}
-        />
+        {(isLotteryPage || isPlcPage) && (
+          <Menu
+            key={isPlcPage ? "plc" : "lottery"}
+            mode="horizontal"
+            selectedKeys={[pathname]}
+            defaultOpenKeys={isPlcPage ? ["device-management"] : []}
+            items={isPlcPage ? plcMenuItems : menuItems}
+            onClick={({ key }) => router.push(key)}
+            className="!border-b-0"
+            style={{ minWidth: 600 }}
+          />
+        )}
       </div>
       <Button icon={<LogoutOutlined />} onClick={handleLogout} type="text">
         退出登录

@@ -7,3 +7,8 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# PLC 本地助手构建产物（由 helper/build-exe.mjs 生成）
+helper/plc-helper.exe
+helper/sea-prep.blob
+helper/sea-config.json

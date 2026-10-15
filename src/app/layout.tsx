@@ -17,7 +17,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body>
         <AntdRegistry>
-          <Header />
+          <Header title="" />
           {children}
         </AntdRegistry>
       </body>

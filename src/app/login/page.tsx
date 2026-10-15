@@ -38,7 +38,7 @@ export default function LoginPage() {
       }
 
       message.success(activeTab === "login" ? "登录成功" : "注册成功");
-      router.push("/dashboard");
+      router.push("/");
     } catch {
       message.error("网络错误");
     } finally {
