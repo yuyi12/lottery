@@ -59,6 +59,7 @@ interface DeviceUpgrade {
 
 const HELPER_URL = process.env.NEXT_PUBLIC_PLC_HELPER_URL || "http://127.0.0.1:43110";
 const HELPER_TOKEN = process.env.NEXT_PUBLIC_PLC_HELPER_TOKEN || "";
+console.log("token值：", process.env.NEXT_PUBLIC_PLC_HELPER_TOKEN);
 
 export default function DeviceUpgradePage() {
   const router = useRouter();
