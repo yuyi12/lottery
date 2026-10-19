@@ -15,19 +15,19 @@ interface Project {
 }
 
 const projects: Project[] = [
-  {
-    key: "lottery",
-    name: "双色球 Lottery",
-    description: "历史记录、指标筛选与统计分析",
-    icon: <HistoryOutlined />,
-    path: "/dashboard",
-  },
+  // {
+  //   key: "lottery",
+  //   name: "双色球 Lottery",
+  //   description: "历史记录、指标筛选与统计分析",
+  //   icon: <HistoryOutlined />,
+  //   path: "/dashboard",
+  // },
   {
     key: "plc",
     name: "PLC",
     description: "PLC 项目管理入口",
     icon: <ControlOutlined />,
-    path: "/plc",
+    path: "/plc/notes",
   },
 ];
 

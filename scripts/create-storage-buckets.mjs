@@ -20,7 +20,7 @@ if (!url || !key) {
 
 const admin = createClient(url, key, { auth: { persistSession: false } });
 
-const BUCKETS = ['brand-logos', 'device-model-images'];
+const BUCKETS = ['brand-logos', 'device-model-images', 'note-images'];
 
 async function main() {
   const { data: buckets, error: listErr } = await admin.storage.listBuckets();

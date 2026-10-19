@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { Button, Typography, Menu } from "antd";
-import { LogoutOutlined, HistoryOutlined, SearchOutlined, BarChartOutlined, AppstoreOutlined, CloudUploadOutlined } from "@ant-design/icons";
+import { LogoutOutlined, HistoryOutlined, SearchOutlined, BarChartOutlined, AppstoreOutlined, CloudUploadOutlined, FileTextOutlined, FolderOpenOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
@@ -53,6 +53,21 @@ export default function Header({ title }: { title: string }) {
 
   const plcMenuItems = [
     {
+      key: "/plc/notes",
+      icon: <FileTextOutlined />,
+      label: "笔记管理",
+    },
+    {
+      key: "/plc/device-document",
+      icon: <FolderOpenOutlined />,
+      label: "设备文档",
+    },
+    {
+      key: "/plc/device-upgrade",
+      icon: <CloudUploadOutlined />,
+      label: "设备升级",
+    },
+    {
       key: "device-management",
       icon: <AppstoreOutlined />,
       label: "设备管理",
@@ -61,11 +76,6 @@ export default function Header({ title }: { title: string }) {
         { key: "/plc/device-type", label: "设备类型" },
         { key: "/plc/device-model", label: "设备型号" },
       ],
-    },
-    {
-      key: "/plc/device-upgrade",
-      icon: <CloudUploadOutlined />,
-      label: "设备升级",
     },
   ];
 
@@ -80,7 +90,6 @@ export default function Header({ title }: { title: string }) {
             key={isPlcPage ? "plc" : "lottery"}
             mode="horizontal"
             selectedKeys={[pathname]}
-            defaultOpenKeys={isPlcPage ? ["device-management"] : []}
             items={isPlcPage ? plcMenuItems : menuItems}
             onClick={({ key }) => router.push(key)}
             className="!border-b-0"

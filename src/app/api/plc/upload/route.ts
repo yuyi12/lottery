@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_BUCKETS = ["brand-logos", "device-model-images"];
+const ALLOWED_BUCKETS = ["brand-logos", "device-model-images", "note-images"];
 
 export async function POST(request: NextRequest) {
   try {

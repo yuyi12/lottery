@@ -4,8 +4,8 @@ import Header from "@/components/header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "双色球记录查询",
-  description: "双色球历史中奖记录查询与更新",
+  title: "工控自动化",
+  description: "",
 };
 
 export default function RootLayout({

@@ -49,10 +49,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <Card className="w-full max-w-md shadow-md">
-        <Title level={3} className="text-center mb-6">
-          双色球记录系统
-        </Title>
-
         <Tabs
           activeKey={activeTab}
           onChange={(key) => setActiveTab(key as "login" | "register")}
